@@ -1,0 +1,100 @@
+<template lang="">
+    <div class = 'login'>
+        <p>登 录</p>
+        <input type = 'text' placeholder = '请输入用户名' ref="username"/>
+        <input type = 'password' placeholder = '请输入密码' ref='pwd'/> 
+        <button @click = 'submit'>登 录</button>
+        <router-link to='register'><span>没有账号？先注册一波</span></router-link>
+    </div>
+</template>
+<script>
+import router from '../src/router'
+import send from '../js/send'
+
+export default {
+   name: 'login',
+   router,
+   data() {
+       return {
+           username: '',
+           password: '',
+       }
+   }, 
+   methods: {
+        login(){
+            let data = {
+                username: this.username,
+                password: this.password
+            }
+            let that = this
+            send.sendMessage('post', 'http://127.0.0.1:8080/login', data).then(function(r){
+                console.log(r)
+                if(r.code === 100){
+                    that.$router.push({path: './homepage/applicationList',query: {userId: r.data.userId}})
+                } else if(r.code === 101) {
+                    alert('密码错误')
+                }
+            })
+        },
+        trim(str){
+            return str.replace(/(^\s*)|(\s*$)/g, "");
+        },
+       submit(){
+           let username = this.$refs.username.value
+            if(!this.trim(username)){
+                alert("请输入用户名")
+            }
+            let pwd = this.$refs.pwd.value
+            if(!this.trim(pwd)) {
+                alert("请输入密码")
+            }
+            this.username = username
+            this.password = pwd
+            this.login()
+       }
+   },
+}
+</script>
+<style>
+    body{
+        background:#F5FFFA;
+    }
+    .login{
+        width: 30%;
+        height: 450px;
+        margin: 100px auto;
+        border: 1px solid gray;
+        text-align: center;
+        background: white;
+        border-radius: 5px;
+    }
+    .login p{
+        font-size: 30px;
+        -webkit-margin-before: 2em;
+    }
+    .login input{
+        width: 70%;
+        height: 40px;
+        font-size: 15px;
+        display: block;
+        margin:2em auto;
+        text-indent: 5px;
+        /* margin-bottom: 20px; */
+    }
+    .login button{
+        width: 40%;
+        height: 40px;
+        margin: auto;
+        color: white;
+        background: #87CEEB;
+        border: none;
+        display: block;
+        font-size: 20px;
+        border-radius: 6px;
+    }
+    .login span{
+        float: right;
+        padding-top: 1.5em;
+        padding-right: 3em;
+    }
+</style>
