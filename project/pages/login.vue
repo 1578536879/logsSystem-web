@@ -10,6 +10,7 @@
 <script>
 import router from '../src/router'
 import send from '../js/send'
+import userInfo from '../js/userInfo'
 
 export default {
    name: 'login',
@@ -28,8 +29,17 @@ export default {
             }
             let that = this
             send.sendMessage('post', 'http://127.0.0.1:8080/login', data).then(function(r){
-                console.log(r)
+                // console.log(r)
                 if(r.code === 100){
+                    let pwd = ''
+                    for(let i=0;i<that.password.length; i++){
+                        pwd += '*'
+                    }
+                    userInfo.setUserInfo({
+                        username: that.username,
+                        password: pwd,
+                        id: r.data.userId
+                    })
                     that.$router.push({path: './homepage/applicationList',query: {userId: r.data.userId}})
                 } else if(r.code === 101) {
                     alert('密码错误')
@@ -57,7 +67,7 @@ export default {
 </script>
 <style>
     body{
-        background:#F5FFFA;
+        background:#F5F5F5;
     }
     .login{
         width: 30%;
@@ -71,6 +81,7 @@ export default {
     .login p{
         font-size: 30px;
         -webkit-margin-before: 2em;
+        background: white
     }
     .login input{
         width: 70%;

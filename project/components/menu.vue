@@ -1,17 +1,30 @@
 <template lang="">
     <div style='position: absolute; width: 100%; height: 100%;'>
         <div class = 'top'>
-            <img src = '../images/homepage/home.svg'/>
-            <p>前端日志监控系统</p>
+            <img src = '../images/homepage/home.svg' @click = 'list' style='cursor:pointer'/>
+            <p @click = 'list' style='cursor:pointer'>前端日志监控系统</p>
+            <p  v-if='type === "application"'>{{appName}}</p>
         </div>
         <div class='left'>
-            <div class = 'list'>
-                <img src = '../images/homepage/list.svg' />
-                <p>应用列表</p>
+            <div v-if='type === "homepage"'>
+                <div class = 'list' @click='list'>
+                    <img src = '../images/homepage/list.svg' />
+                    <p>应用列表</p>
+                </div>
+                <div class = 'person' @click='person'>
+                    <img src='../images/homepage/person.svg'/>
+                    <p>个人信息</p>
+                </div>
             </div>
-            <div class = 'person'>
-                <img src='../images/homepage/person.svg'/>
-                <p>个人信息</p>
+            <div v-else>
+                <div class = 'list' @click='statistics'>
+                    <img src = '../images/application/statistics.svg' />
+                    <p>收集信息</p>
+                </div>
+                <div class = 'person' @click='appInfo'>
+                    <img src='../images/application/app.svg'/>
+                    <p>应用信息</p>
+                </div>
             </div>
         </div>
     </div>
@@ -24,53 +37,74 @@ import router from '../src/router'
 export default {
     name: 'home-menu',
     router,
+    props: ['type', 'appName'],
     data() {
         return {
             
         }
     },
     created() {
-        
+        // console.log(this.type)
     },
     methods: {
-        
+        list(){
+            this.$router.push({path: './applicationList'})
+        },
+        person(){
+            this.$router.push({path: './person'})
+        },
+        statistics(){
+
+        },
+        appInfo(){
+
+        }
     },
 }
 </script>
 <style>
-    *{
+    body{
         margin: 0;
+        background: #F5F5F5;
     }
     .top{
-        background: #F5F5F5;
-        border: 1px solid #DCDCDC;
+        background: #ffffff;
+        border-bottom: 1px solid #DCDCDC;
     }
     .top  img{
-        width:2em
+        width:2em;    
+        background: white;
+        padding-bottom: 1em;
     }
     .top p{
         display: inline;
         font-size: 2em;
         color: #515151;
         line-height: 2em;
+        background: white;
     }
     .left{
         width: 10em;
-        background: #F5F5F5;
+        background: #ffffff;
         height: calc(100% - 4.1em);
+        border-right: 1px solid #DCDCDC;
     }
     .left .list, .left .person{
-        background: white;
+        background: #F5F5F5;
         /* margin-top: 5em; */
         height: 3em;
+        cursor: pointer;
     }
     .left .list{
         transform: translateY(5em);
         margin-bottom: 11em;
+
     }
     .left .list img, .left .person img{
-        width: 1em;
+        width: 3em;
+        height: 2em;
         padding-left: 1em;
+        padding-bottom: 0.3em;
     }
     .left .list p, .left .person p{
         display: inline;

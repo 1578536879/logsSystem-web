@@ -67,7 +67,7 @@ export default {
 </script>
 <style>
     body{
-        background:#F5FFFA;
+        background:#F5F5F5;
     }
     .register{
         width: 30%;

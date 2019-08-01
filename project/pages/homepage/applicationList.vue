@@ -1,16 +1,10 @@
 <template>
     <div class="applicationList">
-        <home-menu></home-menu>
-        <!-- <div class="delete">
-            <b-alert show class="alert">
-                <img src="../../images/warning.svg"/>
-                <p style="font-size:30px ">操作提示</p>
-                <p>确认删除吗？</p>
-                <button style="margin-right: 2em;" @click="cancel">取 消</button>
-                <button style="background: #FF7F50;" @click="sureDel">确 认</button>
-            </b-alert>
+        <home-menu :type='type'></home-menu>
 
-        </div> -->
+        <b-alert show variant="success" v-if="successMessage" dismissible class="delete">{{successMessage}}</b-alert>
+        <b-alert show variant="danger" v-if="errMessage" dismissible class="delete">{{errMessage}}</b-alert>
+
         <b-alert show variant="warning"  class="delete" v-if="del !== -1">
             <span>你确定要删除此应用吗？</span>
             <b-button  variant="outline-warning"  @click="sureDel">确 定</b-button>
@@ -25,8 +19,8 @@
                     <button style="background:red" @click="deleteApp(index)">删 除</button>
                 </div>
             </div>
-            <div style="background: #E3E5E6;" class="add" @click="addApp">
-                <img src = '../../images/homepage/add.svg'/>
+            <div class="add" @click="addApp">
+                <span>+</span>
             </div>
         </div>
     </div>
@@ -35,6 +29,7 @@
 import homeMenu from '../../components/menu.vue'
 import router from '../../src/router'
 import send from '../../js/send';
+import userInfo from '../../js/userInfo'
 
 export default {
     name: 'applicationList',
@@ -50,32 +45,43 @@ export default {
             appStyle:[],
             show: -1,
             del: -1,
+            type: 'homepage',
+            successMessage: '',
+            errMessage:''
         }
     },
     created() {
         let that = this
-        send.sendMsgGet('http://127.0.0.1:8080/queryAppList', `userId=${that.$route.query.userId}`).then(function(r){
-            if(r.data.code === 100){
-                that.appInfo = r.data.data
-                r.data.data.forEach(ele => {
-                    let time = new Date(parseInt(ele.time))
-                    time = `${time.getFullYear()}.${time.getMonth()+1}.${time.getDate()}` 
-                    let name = ele.name
-                    that.appList.push({
-                        name: name,
-                        createTime: time
-                    })
-                    let index = parseInt(Math.random() * that.colors.length)
-                    that.appStyle.push({background: that.colors[index]})
-                });
-            } else if(r.data.code === 101) {
-                that.appList = []
+        if(userInfo.getAppList()){
+            this.appList = userInfo.getAppList()
+            for(let i=0;i<this.appList.length;i++){
+                let index = parseInt(Math.random() * that.colors.length)
+                that.appStyle.push({background: that.colors[index]})
             }
-        })
+        }
+        else {
+            send.sendMsgGet('http://127.0.0.1:8080/queryAppList', `userId=${that.$route.query.userId}`).then(function(r){
+                if(r.data.code === 100){
+                    that.appInfo = r.data.data
+                    r.data.data.forEach(ele => {
+                        let time = new Date(parseInt(ele.time))
+                        time = `${time.getFullYear()}.${time.getMonth()+1}.${time.getDate()}` 
+                        let name = ele.name
+                        that.appList.push({
+                            name: name,
+                            createTime: time,
+                            id: ele.id
+                        })
+                        userInfo.setAppList(that.appList)
+                        let index = parseInt(Math.random() * that.colors.length)
+                        that.appStyle.push({background: that.colors[index]})
+                    });
+                } else if(r.data.code === 101) {
+                    that.appList = []
+                }
+            })
+        }
     },
-    // updated() {
-    //     console.log(this.appList)
-    // },
     methods: {
         enter(index){
             console.log(index)
@@ -99,13 +105,27 @@ export default {
             console.log(this.del)
         },
         addApp(index){
-
+            this.$router.push({path: './addApplication'})
         },
         cancel(){
             this.del = -1
         },
         sureDel(){
-            send.sendMessage('delete', 'http://127.0.0.1:8080/deleteApp', {})
+            let that = this
+            let appId = that.appList[that.del].id
+            send.sendMsgDelete('http://127.0.0.1:8080/deleteApp', {appId: appId}).then(res=>{
+                    if(res.data.code === 100){
+                        that.appList.splice(that.del,1)
+                        
+                        userInfo.setAppList(that.appList)
+                        that.del = -1
+                        that.successMessage = '应用删除成功  √'
+
+                    }else {
+                        that.del = -1
+                        that.errMessage = res.data.message
+                    }
+                })
         }
     },
 }
@@ -129,6 +149,7 @@ export default {
         color: white;
         text-align: center;
         padding-top: 1em;
+        cursor: pointer;
     }
     .applicationList .applist .show{
         width: 100%;
@@ -155,10 +176,17 @@ export default {
         margin-right: 5em;
         margin-bottom: 2em;
     }
-    .applicationList .applist .add img{
-       transform: translateY(1.5em);
-        width: 4em;
-        margin-left: 3.5em;
+    .add{
+        background: white;
+        text-align: center;
+        line-height: 5em;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .add span{
+        background: white;
+        font-size: 9em;
+        color: #DCDCDC;
     }
     .delete{
         top: 6em;
