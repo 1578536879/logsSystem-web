@@ -1,10 +1,13 @@
 <template lang="">
     <div class = 'register'>
         <p>注 册</p>
-        <input type = 'text' placeholder = '请输入用户名' ref="username"/>
+        <b-alert show variant="danger" dismissible  fade style='margin: auto;width: 70%;' v-if='errMsg'>
+            {{errMsg}}
+        </b-alert>
+        <input type = 'text' placeholder = '请输入用户名' ref="username" style='margin-top: 1em;'/>
         <input type = 'password' placeholder = '请输入密码' ref='pwd'/> 
         <input type = 'password' placeholder = '请确认密码' ref='spwd'/> 
-        <button @click = 'submit'>注 册</button>
+        <button @click = 'submit' class='submit'>注 册</button>
         <router-link to="login"><span>已有账号？直接登录</span></router-link>
     </div>
 </template>
@@ -19,6 +22,7 @@ export default {
        return {
            username: '',
            password: '',
+           errMsg: ''
        }
    }, 
    methods: {
@@ -33,6 +37,9 @@ export default {
                if(res.code === 100){
                    that.$router.push({path: '/login'})
                }
+           }).catch(err=>{
+               console.log(err.response)
+               that.errMsg = err.response.data.message
            })
        },
         trim(str){
@@ -41,21 +48,22 @@ export default {
        submit(){
            let username = this.$refs.username.value
             if(!this.trim(username)){
-                alert("请输入用户名")
+                this.errMsg = "请输入用户名"
+                // alert()
                 return 
             }
             let pwd = this.$refs.pwd.value
             if(!this.trim(pwd)) {
-                alert("请输入密码")
+                this.errMsg = "请输入密码"
                 return 
             }
             let spwd = this.$refs.spwd.value
             if(!this.trim(spwd)){
-                alert('请输入确认密码')
+                this.errMsg = "请输入确认密码"
                 return 
             }
             if(spwd !== pwd){
-                alert('两次密码输入不一致')
+                this.errMsg = "两次密码输入不一致"
                 return 
             }
             this.username = username
@@ -71,7 +79,7 @@ export default {
     }
     .register{
         width: 30%;
-        height: 450px;
+        height: 505px;
         margin: 100px auto;
         border: 1px solid gray;
         text-align: center;
@@ -91,7 +99,7 @@ export default {
         text-indent: 5px;
         /* margin-bottom: 20px; */
     }
-    .register button{
+    .submit{
         width: 40%;
         height: 40px;
         margin: auto;

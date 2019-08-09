@@ -6,17 +6,11 @@ let sendMessage = function(method, route, msg){
         method: method,
         url: route,
         data: msg
-    }).then(function(res){
-        return res.data
-    }).catch(function(err){
-        console.log(err)
     })
 }
 
 let sendMsgGet = function(route, msg){
-    return axios.get(`${route}?${msg}`,{
-        params: msg
-    }).then(function(res){
+    return axios.get(`${route}?${msg}`,).then(function(res){
         return res
     }).catch(function(err){
         console.log(err)

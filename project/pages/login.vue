@@ -1,9 +1,13 @@
 <template lang="">
     <div class = 'login'>
         <p>登 录</p>
-        <input type = 'text' placeholder = '请输入用户名' ref="username"/>
+        <!-- <b-alert show variant="danger" dismissible v-if='errMsg' style='width: 70%;margin: auto;'>{{errMsg}}</b-alert> -->
+        <b-alert show variant="danger" dismissible style='margin: auto;width: 70%;' v-if='errMsg'>
+            {{errMsg}}
+        </b-alert>
+        <input type = 'text' placeholder = '请输入用户名' ref="username" style='margin-top: 1em;'/>
         <input type = 'password' placeholder = '请输入密码' ref='pwd'/> 
-        <button @click = 'submit'>登 录</button>
+        <button @click = 'submit' class='submit'>登 录</button>
         <router-link to='register'><span>没有账号？先注册一波</span></router-link>
     </div>
 </template>
@@ -19,6 +23,7 @@ export default {
        return {
            username: '',
            password: '',
+           errMsg: ''
        }
    }, 
    methods: {
@@ -29,8 +34,8 @@ export default {
             }
             let that = this
             send.sendMessage('post', 'http://127.0.0.1:8080/login', data).then(function(r){
-                // console.log(r)
-                if(r.code === 100){
+                console.log(r)
+                if(r.data.code === 100){
                     let pwd = ''
                     for(let i=0;i<that.password.length; i++){
                         pwd += '*'
@@ -41,9 +46,11 @@ export default {
                         id: r.data.userId
                     })
                     that.$router.push({path: './homepage/applicationList',query: {userId: r.data.userId}})
-                } else if(r.code === 101) {
-                    alert('密码错误')
                 }
+            }).catch(err=>{
+                // console.log(err.response)
+                
+                that.errMsg = err.response.data.message
             })
         },
         trim(str){
@@ -52,11 +59,11 @@ export default {
        submit(){
            let username = this.$refs.username.value
             if(!this.trim(username)){
-                alert("请输入用户名")
+                that.errMsg = "请输入用户名"
             }
             let pwd = this.$refs.pwd.value
             if(!this.trim(pwd)) {
-                alert("请输入密码")
+                that.errMsg = "请输入密码"
             }
             this.username = username
             this.password = pwd
@@ -92,7 +99,7 @@ export default {
         text-indent: 5px;
         /* margin-bottom: 20px; */
     }
-    .login button{
+    .submit{
         width: 40%;
         height: 40px;
         margin: auto;

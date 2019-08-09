@@ -7,7 +7,10 @@
             <b-button variant="light" @click='cancle' style="float:right">取消</b-button>
             <b-button variant="success" @click="submit" style="float:right;margin-right:2em">确定</b-button>
         </b-modal>
-         <div class="info">
+        <b-alert v-if="result" show dismissible >
+            {{result}}
+        </b-alert>
+        <div class="info">
             <p style="font-size:25px;text-align:center">应用信息</p>
             <div class="appName"> 
                 <span style="float:left">应用名： </span>
@@ -54,6 +57,7 @@ export default {
             domainName: '',
             deleteIndex: -1,
             modifyIndex: -1,
+            result: ''
         }
     },
     created() {
@@ -69,7 +73,7 @@ export default {
     methods: {
         insert(){
             this.$refs["information-doaminName-modal" ].show()
-            
+
         },
         deleteDomainName(index){
             this.deleteIndex = index
@@ -117,8 +121,10 @@ export default {
                 }).then(res=>{
                     console.log(res)       
                     if(res.data.code === 100){
-
+                        
                     }   
+                }).catch(err=>{
+                    that.result = err.response.data.message
                 })
             }
             this.$refs["information-doaminName-modal" ].hide()

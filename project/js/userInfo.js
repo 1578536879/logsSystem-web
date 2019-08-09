@@ -12,6 +12,10 @@ let setPassword = function(params) {
     userInfo.password = params
 }
 
+let setAppList = function(info){
+    userInfo.list = info
+}
+
 let getUsername = function(){
     return userInfo.username
 }
@@ -22,10 +26,6 @@ let getUserId = function(){
 
 let getPassword = function(){
     return userInfo.password
-}
-
-let setAppList = function(info){
-    userInfo.list = info
 }
 
 let getAppList = function(){

@@ -104,12 +104,11 @@ export default {
                 this.modifyPassword = true 
             }
         },
-        submit(){
+        modifyUsernameSubmit(){
             let that = this
-            if(this.modifyUsername){
-                console.log(this.$refs.username.value)
-                let username = this.$refs.username.value
-                send.sendMessage('post', 'http://127.0.0.1:8080/modifyUsername', {
+            let username = this.$refs.username.value
+
+            send.sendMessage('post', 'http://127.0.0.1:8080/modifyUsername', {
                     userId: userInfo.getUserId(),
                     username: username,
                     oldUsername: that.username
@@ -125,44 +124,53 @@ export default {
                         that.errMessage = res.message
                     }
                 })
-            } else if(this.modifyPassword){
-                let password = this.$refs.password.value
-                let newPassword = this.$refs.spassword.value
-                send.sendMessage('post', 'http://127.0.0.1:8080/modifyPassword', {
-                    userId: userInfo.getUserId(),
-                    newPassword: newPassword,
-                    oldPassword: password
-                }).then(res=>{
-                    console.log(res)
-                    if(res.code === 100){
-                        let pwd = ''
-                        for(let i=0;i<newPassword.length; i++){
-                            pwd += '*'
-                        }
-                        that.password = pwd
-                        userInfo.setPassword(pwd)
-                        that.$refs['person-information'].hide()
-                        that.modifyPassword = false
-                        that.successMessage = '密码修改成功  √'
-                    }else {
-                        that.errMessage = res.message
+        },
+        modifyPasswordSubmit(){
+            let that = this
+            let password = this.$refs.password.value
+            let newPassword = this.$refs.spassword.value
+            send.sendMessage('post', 'http://127.0.0.1:8080/modifyPassword', {
+                userId: userInfo.getUserId(),
+                newPassword: newPassword,
+                oldPassword: password
+            }).then(res=>{
+                if(res.code === 100){
+                    let pwd = ''
+                    for(let i=0;i<newPassword.length; i++){
+                        pwd += '*'
                     }
+                    that.password = pwd
+                    userInfo.setPassword(pwd)
+                    that.$refs['person-information'].hide()
+                    that.modifyPassword = false
+                    that.successMessage = '密码修改成功  √'
+                }
+            }).catch(err=>{
+                that.errMessage = err.response.data.message
+            })
+        },
+        deleteAppSubmit(){
+            let appId = that.list[that.deleteIndex].id
+            send.sendMsgDelete('http://127.0.0.1:8080/deleteApp', {appId: appId}).then(res=>{
+                if(res.data.code === 100){
+                    that.list.splice(that.deleteIndex,1)
+                    userInfo.setAppList(that.list)
+                    that.$refs['person-information'].hide()
+                    that.successMessage = '应用删除成功  √'
+                }
+                }).catch(err=>{
+                    that.errMessage = err.response.data.message
+                    that.$refs['person-information'].hide()
                 })
+        },
+        submit(){
+            if(this.modifyUsername){
+                this.modifyUsernameSubmit()
+            } else if(this.modifyPassword){
+                this.modifyPasswordSubmit()
             }
             else {
-                let appId = that.list[that.deleteIndex].id
-                send.sendMsgDelete('http://127.0.0.1:8080/deleteApp', {appId: appId}).then(res=>{
-                    if(res.data.code === 100){
-                        that.list.splice(that.deleteIndex,1)
-                        
-                        userInfo.setAppList(that.list)
-                        that.$refs['person-information'].hide()
-                        that.successMessage = '应用删除成功  √'
-                    }else {
-                        that.errMessage = res.data.message
-                        that.$refs['person-information'].hide()
-                    }
-                })
+                this.deleteAppSubmit()
             }
         },
         canle(){
@@ -174,7 +182,6 @@ export default {
             this.modifyPassword=false
         },
         add(){
-            console.log(132)
             this.$router.push({path: './addApplication'})
         }
     },

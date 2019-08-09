@@ -1,9 +1,14 @@
 <template lang="">
-    <div style='position: absolute; width: 100%; height: 100%;'>
-        <div class = 'top'>
+    <div style='position: absolute; width: 100%; height: 100%;'>  
+         <div class='top'  v-if='type === "homepage"'>
             <img src = '../images/homepage/home.svg' @click = 'list' style='cursor:pointer'/>
             <p @click = 'list' style='cursor:pointer'>前端日志监控系统</p>
-            <p  v-if='type === "application"'>{{appName}}</p>
+        </div>
+        <div class='top' style='text-align:center' v-else >
+            <img src='../images/back.svg' style='float:left;padding-top:1em;cursor:pointer' @click='back()'/>
+            <p>
+                {{appName}}
+            </p>
         </div>
         <div class='left'>
             <div v-if='type === "homepage"'>
@@ -47,11 +52,16 @@ export default {
         // console.log(this.type)
     },
     methods: {
+
         list(){
+            console.log(123)
             this.$router.push({path: './applicationList'})
         },
         person(){
             this.$router.push({path: './person'})
+        },
+        back(){
+            this.$router.go(-1)
         },
         statistics(){
 

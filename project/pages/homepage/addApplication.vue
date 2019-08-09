@@ -60,7 +60,7 @@ export default {
     methods: {
         submit(){
             let that = this
-            let arr = this.domainName.split('.')
+            let arr = this.domainName.split(';')
             //this.nameState = true
             send.sendMessage('post', 'http://127.0.0.1:8080/createApp', {
                 userId: userInfo.getUserId(),
@@ -81,9 +81,9 @@ export default {
                     })
                     console.log(apps)
                     userInfo.setAppList(apps)
-                }else {
-                    that.errMessage = res.message
                 }
+            }).catch(err=>{
+                that.errMessage =  err.response.data.message
             })
         },
         back(){

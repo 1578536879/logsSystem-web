@@ -60,9 +60,13 @@ export default {
             }
         }
         else {
-            send.sendMsgGet('http://127.0.0.1:8080/queryAppList', `userId=${that.$route.query.userId}`).then(function(r){
-                if(r.data.code === 100){
+            send.sendMsgGet('http://127.0.0.1:8080/queryAppList', `userId=${that.$route.query.userId}`
+                 ).then(function(r){
+            //    console.log(r)
+               if(r.data.code === 100){
+                    // debugger
                     that.appInfo = r.data.data
+                    // debugger
                     r.data.data.forEach(ele => {
                         let time = new Date(parseInt(ele.time))
                         time = `${time.getFullYear()}.${time.getMonth()+1}.${time.getDate()}` 
@@ -70,15 +74,16 @@ export default {
                         that.appList.push({
                             name: name,
                             createTime: time,
-                            id: ele.id
+                            id: ele.id,
+                            domainNames: ele.domainNames
                         })
                         userInfo.setAppList(that.appList)
                         let index = parseInt(Math.random() * that.colors.length)
                         that.appStyle.push({background: that.colors[index]})
                     });
-                } else if(r.data.code === 101) {
-                    that.appList = []
                 }
+            }).catch(err=>{
+                that.appList = []
             })
         }
     },
@@ -98,7 +103,8 @@ export default {
             this.show = -1
         },
         lookAppInfo(index){
-
+            let that = this
+            this.$router.push({path:'../application/information', query: {app: that.appList[index]}})
         },
         deleteApp(index){
             this.del = index
@@ -121,10 +127,10 @@ export default {
                         that.del = -1
                         that.successMessage = '应用删除成功  √'
 
-                    }else {
-                        that.del = -1
-                        that.errMessage = res.data.message
                     }
+                }).catch(err=>{
+                        that.del = -1
+                        that.errMessage = err.response.data.message
                 })
         }
     },
