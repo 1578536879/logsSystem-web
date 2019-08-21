@@ -36,16 +36,11 @@ export default {
             send.sendMessage('post', 'http://127.0.0.1:8080/login', data).then(function(r){
                 console.log(r)
                 if(r.data.code === 100){
-                    let pwd = ''
-                    for(let i=0;i<that.password.length; i++){
-                        pwd += '*'
-                    }
                     userInfo.setUserInfo({
                         username: that.username,
-                        password: pwd,
-                        id: r.data.userId
+                        id: r.data.data.userId
                     })
-                    that.$router.push({path: './homepage/applicationList',query: {userId: r.data.userId}})
+                    that.$router.push({path: './homepage/applicationList'})
                 }
             }).catch(err=>{
                 // console.log(err.response)
@@ -59,11 +54,11 @@ export default {
        submit(){
            let username = this.$refs.username.value
             if(!this.trim(username)){
-                that.errMsg = "请输入用户名"
+                this.errMsg = "请输入用户名"
             }
             let pwd = this.$refs.pwd.value
             if(!this.trim(pwd)) {
-                that.errMsg = "请输入密码"
+                this.errMsg = "请输入密码"
             }
             this.username = username
             this.password = pwd

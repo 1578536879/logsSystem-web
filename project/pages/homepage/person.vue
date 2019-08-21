@@ -2,11 +2,11 @@
     <div class='personInfo'>
         <home-menu :type="type"></home-menu>
         <!-- <div v-if="alert"> -->
-        <b-alert show variant="success" v-if="successMessage" dismissible style="width: 40%;left: 32%;top: 5em;">{{successMessage}}</b-alert>
+        <b-alert show variant="success" v-if="successMessage" dismissible style="width: 65%;left: 20%;top: 5em;">{{successMessage}}</b-alert>
         <b-modal ref="person-information" centered hide-footer hide-header-close hide-header>
             
-            <b-alert show variant="danger" v-if="errMessage" dismissible>{{errMessage}}</b-alert>
             <p>{{title}}</p>
+            <b-alert show variant="danger" v-if="errMessage">{{errMessage}}</b-alert>
 
             <input type="text" placeholder="请输入修改后的用户名" ref="username" v-if='modifyUsername' class="modifyInput"/>
 
@@ -27,7 +27,7 @@
             </div>
             <div class="password">
                 <span style="float:left">密码：</span>
-                <span>{{password}}</span>
+                <span>******</span>
                 <span style="float:right;color: green;cursor: pointer;font-size: 15px;cursor: pointer;opacity: 0.7;" @click="modify('password')">修改</span>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 <span>应用ID</span>
                 <span style='float:right'>操作</span>
             </b-list-group-item>
-            <div v-for="(item,index) in list" :key='index' class="content">
+            <div v-for="(item,index) in list" :key='index' class="content" @click="lookAppInfo(index)">
                 <div class="name">{{item.name}}</div>
                 <div class="id">{{item.id}}</div>
                 <div class="do">
@@ -78,10 +78,27 @@ export default {
         }
     },
     created() {
-        this.username = userInfo.getUsername()
-        this.password = userInfo.getPassword()
-        this.list = userInfo.getAppList()
-        console.log(this.list)
+        let that = this
+        userInfo.getUsername().then(res=>{
+            if(res.data.code === 100){
+                that.username = res.data.data.username
+            }
+        }).catch(err=>{
+            if(err.response.data.code === 250) {
+                that.$router.push({path:'../login'})
+                return 
+            }
+        })
+        userInfo.getAppList().then(res=>{
+            if(res.data.code === 100){
+                that.list = res.data.data
+            }
+        }).catch(err=>{
+            if(err.response.data.code === 250) {
+                that.$router.push({path:'../login'})
+                return 
+            }
+        })
     },
     methods: {
         deleteApp(index){
@@ -109,12 +126,11 @@ export default {
             let username = this.$refs.username.value
 
             send.sendMessage('post', 'http://127.0.0.1:8080/modifyUsername', {
-                    userId: userInfo.getUserId(),
                     username: username,
                     oldUsername: that.username
                 }).then(res=>{
                     console.log(res)
-                    if(res.code === 100){
+                    if(res.data.code === 100){
                         that.username = username
                         userInfo.setUsername(username)
                         that.$refs['person-information'].hide()
@@ -122,6 +138,12 @@ export default {
                         that.successMessage = '用户名修改成功  √'
                     }else {
                         that.errMessage = res.message
+                    }
+                }).catch(err=>{
+                    that.errMessage = err.response.data.message
+                    if(err.response.data.code === 250) {
+                        that.$router.push({path:'../login'})
+                        return 
                     }
                 })
         },
@@ -134,27 +156,25 @@ export default {
                 newPassword: newPassword,
                 oldPassword: password
             }).then(res=>{
-                if(res.code === 100){
-                    let pwd = ''
-                    for(let i=0;i<newPassword.length; i++){
-                        pwd += '*'
-                    }
-                    that.password = pwd
-                    userInfo.setPassword(pwd)
+                if(res.data.code === 100){
                     that.$refs['person-information'].hide()
                     that.modifyPassword = false
                     that.successMessage = '密码修改成功  √'
                 }
             }).catch(err=>{
                 that.errMessage = err.response.data.message
+                if(err.response.data.code === 250) {
+                    that.$router.push({path:'../login'})
+                    return 
+                }
             })
         },
         deleteAppSubmit(){
+            let that = this
             let appId = that.list[that.deleteIndex].id
             send.sendMsgDelete('http://127.0.0.1:8080/deleteApp', {appId: appId}).then(res=>{
                 if(res.data.code === 100){
                     that.list.splice(that.deleteIndex,1)
-                    userInfo.setAppList(that.list)
                     that.$refs['person-information'].hide()
                     that.successMessage = '应用删除成功  √'
                 }
@@ -178,11 +198,18 @@ export default {
             this.alert = false
             this.deleteIndex = -1
             this.alert=false
+            this.errMessage = ''
             this.modifyUsername=false
             this.modifyPassword=false
         },
         add(){
             this.$router.push({path: './addApplication'})
+        },
+        lookAppInfo(index){
+            let that = this
+            userInfo.setApplicationId(that.list[index]).then(res=>{
+                that.$router.push({path:'../application/information'})
+            })
         }
     },
 }

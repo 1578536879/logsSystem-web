@@ -50,23 +50,11 @@ export default {
             errMessage:''
         }
     },
-    created() {
+    mounted() {
         let that = this
-        if(userInfo.getAppList()){
-            this.appList = userInfo.getAppList()
-            for(let i=0;i<this.appList.length;i++){
-                let index = parseInt(Math.random() * that.colors.length)
-                that.appStyle.push({background: that.colors[index]})
-            }
-        }
-        else {
-            send.sendMsgGet('http://127.0.0.1:8080/queryAppList', `userId=${that.$route.query.userId}`
-                 ).then(function(r){
-            //    console.log(r)
-               if(r.data.code === 100){
-                    // debugger
+        userInfo.getAppList().then(function(r){
+            if(r.data.code === 100){
                     that.appInfo = r.data.data
-                    // debugger
                     r.data.data.forEach(ele => {
                         let time = new Date(parseInt(ele.time))
                         time = `${time.getFullYear()}.${time.getMonth()+1}.${time.getDate()}` 
@@ -77,15 +65,17 @@ export default {
                             id: ele.id,
                             domainNames: ele.domainNames
                         })
-                        userInfo.setAppList(that.appList)
                         let index = parseInt(Math.random() * that.colors.length)
                         that.appStyle.push({background: that.colors[index]})
                     });
                 }
             }).catch(err=>{
                 that.appList = []
+                if(err.response.data.code === 250){
+                    that.$router.push({path:'../login'})
+                }
             })
-        }
+           
     },
     methods: {
         enter(index){
@@ -104,7 +94,10 @@ export default {
         },
         lookAppInfo(index){
             let that = this
-            this.$router.push({path:'../application/information', query: {app: that.appList[index]}})
+            userInfo.setApplicationId(that.appList[index]).then(res=>{
+                that.$router.push({path:'../application/information'})
+            })
+            
         },
         deleteApp(index){
             this.del = index
@@ -122,8 +115,6 @@ export default {
             send.sendMsgDelete('http://127.0.0.1:8080/deleteApp', {appId: appId}).then(res=>{
                     if(res.data.code === 100){
                         that.appList.splice(that.del,1)
-                        
-                        userInfo.setAppList(that.appList)
                         that.del = -1
                         that.successMessage = '应用删除成功  √'
 

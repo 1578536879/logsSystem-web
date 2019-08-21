@@ -1,14 +1,21 @@
 <template>
     <div>
         <home-menu :type = 'type' :appName="app.name"></home-menu>
-        <b-modal ref="information-doaminName-modal" hide-footer>
-            <b-form-input v-model="domainName" placeholder="Enter your name" v-if="modifyIndex !== -1" style="margin-bottom:2em"></b-form-input>
+        <b-modal ref="information-domainName-modal" hide-footer>
             <p v-if="deleteIndex !== -1">确定删除此域名吗？</p>
+            <b-alert show variant="danger" v-if="errMsg">
+                {{errMsg}}
+            </b-alert>
+            <b-form-input v-model="domainName" placeholder="请输入域名" v-if="modifyIndex !== -1 || insertNewDomainName" style="margin-bottom:2em"></b-form-input>
+            <b-form-input v-model="modifyName" placeholder="请输入应用名" v-else-if='deleteIndex === -1' style="margin-bottom:2em"></b-form-input>
             <b-button variant="light" @click='cancle' style="float:right">取消</b-button>
             <b-button variant="success" @click="submit" style="float:right;margin-right:2em">确定</b-button>
         </b-modal>
         <b-alert v-if="result" show dismissible >
             {{result}}
+        </b-alert>
+        <b-alert show variant="danger" v-if="errMsg">
+            {{errMsg}}
         </b-alert>
         <div class="info">
             <p style="font-size:25px;text-align:center">应用信息</p>
@@ -57,78 +64,131 @@ export default {
             domainName: '',
             deleteIndex: -1,
             modifyIndex: -1,
-            result: ''
+            result: '',
+            insertNewDomainName: false,
+            errMsg: '',
+            modifyName: ''
         }
     },
-    created() {
-        this.app = this.$route.query.app
-        console.log(this.app)
-        let apps = userInfo.getAppList()
+    mounted() {
         let that = this
-        apps = apps.filter(ele => ele.id === that.app.id)
-        this.domainNames = apps[0].domainNames
-
+        // apps = apps.filter(ele => ele.id === that.app.id)
+        // this.domainNames = apps[0].domainNames
+        send.sendMsgGet('http://127.0.0.1:8080/queryApplication').then(res=>{
+            if(res.data.code === 100){
+                that.app = res.data.data
+                that.domainNames = res.data.data.domainNames
+            }
+        }).catch(err=>{
+            if(err.response.data.code === 250) {
+                that.$router.push({path:'../login'})
+            }
+        })
         // console.log(this.domainName)
     },
     methods: {
         insert(){
-            this.$refs["information-doaminName-modal" ].show()
+            this.insertNewDomainName = true
+            this.$refs["information-domainName-modal" ].show()
+            let that = this
+            if(!that.domainName){
 
+            }
         },
         deleteDomainName(index){
             this.deleteIndex = index
-            this.$refs["information-doaminName-modal" ].show()
+            this.$refs["information-domainName-modal" ].show()
         },
-        modify(index){
-            this.modifyIndex = index
-            this.doaminName = this.domainNames[index]
-            this.$refs["information-doaminName-modal" ].show()
+        modify(type){
+            console.log(type)
+            if(type === 'username'){
+                this.modifyIndex = -1
+                this.insertNewDomainName = false
+                this.modifyName = this.app.name
+            }
+            else {
+                this.modifyIndex = type
+                this.domainName = this.domainNames[type]
+            }
+            this.$refs["information-domainName-modal" ].show()
 
         },
         cancle(){
             this.deleteIndex = -1
             this.modifyIndex = -1
-            this.$refs["information-doaminName-modal" ].hide()
+            this.insertNewDomainName = false
+            this.$refs["information-domainName-modal" ].hide()
 
         },
         submit(){
-            let that = this
             let flag = false
+            let domainNames = this.domainNames
+            console.log(this.modifyIndex)
             if(this.deleteIndex !== -1){
-                console.log(this.domainNames)
-                this.domainNames.splice(this.deleteIndex, 1)
+                domainNames.splice(this.deleteIndex, 1)
                 flag = true
-                this.deleteIndex = -1
-
             } else if(this.modifyIndex !== -1){
-                this.domainNames[this.modifyIndex] = this.doaminName
-                this.modifyIndex = -1
-                this.domainName = ''
-
+                domainNames[this.modifyIndex] = this.domainName
                 flag = true
-            } else {
-                if(this.doaminName){
-                    this.domainNames.push(this.doaminName)
-                    this.domainName = ''
-
+            } else if(this.insertNewDomainName){
+                if(this.domainName){
+                    domainNames.push(this.domainName)
                     flag = true
+                }else {
+                    this.errMsg = '域名不能为空'
+                    return
+                }
+            }else{
+                console.log(this.modifyIndex)
+                if(!this.modifyName) {
+                    this.errMsg = '应用名不能为空'
+                    return
+                }else{
+                   this.modifyAppName()
                 }
             }
             if(flag){
-                send.sendMessage('post', 'http://127.0.0.1:8080/modifyDomainNames', {
-                    appId: that.app.id,
-                    domainNames: that.domainNames
-                }).then(res=>{
-                    console.log(res)       
-                    if(res.data.code === 100){
-                        
-                    }   
-                }).catch(err=>{
-                    that.result = err.response.data.message
-                })
+                this.modifyDomainName(domainNames)
             }
-            this.$refs["information-doaminName-modal" ].hide()
-
+        },
+        modifyDomainName(domainNames){
+            let that = this
+            send.sendMessage('post', 'http://127.0.0.1:8080/modifyDomainNames', {
+                domainNames: domainNames
+            }).then(res=>{     
+                    if(res.data.code === 100){
+                        that.$refs["information-domainName-modal" ].hide()
+                        that.domainNames = domainNames
+                        that.modifyIndex = -1
+                        that.domainName = ''
+                        that.deleteIndex = -1
+                        that.insertNewDomainName = false
+                    }   
+            }).catch(err=>{
+                if(err.response.data.code === 250){
+                    that.$router.push({path:'../login'})
+                    return 
+                }
+                that.errMsg = err.response.data.message
+            })
+        },
+        modifyAppName(){
+            let that = this
+            send.sendMessage('put', 'http://127.0.0.1:8080/modifyAppName', {
+                newName: that.modifyName
+            }).then(res=>{
+                if(res.data.code === 100){
+                    that.$refs["information-domainName-modal" ].hide()
+                    that.app.name = that.modifyName
+                    that.modifyName = ''
+                }
+            }).catch(err=>{
+                if(err.response.data.code === 250){
+                    that.$router.push({path:'../login'})
+                    return 
+                }
+                that.errMsg = err.response.data.message
+            })
         }
     },
 }
