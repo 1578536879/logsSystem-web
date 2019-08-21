@@ -1,4 +1,5 @@
 let userInfo = {}
+import send from './send'
 
 let setUserInfo = function(info){
     userInfo = info
@@ -8,37 +9,43 @@ let setUsername = function(params) {
     userInfo.username = params
 }
 
-let setPassword = function(params) {
-    userInfo.password = params
-}
-
-let setAppList = function(info){
-    userInfo.list = info
+let setApplicationId = function(info){
+    return send.sendMessage('post', 'http://127.0.0.1:8080/setApplicationId', info).then(res=>{
+        return res
+    })
 }
 
 let getUsername = function(){
-    return userInfo.username
+    return send.sendMsgGet('http://127.0.0.1:8080/getUsername').then(res=>{
+        return res 
+    })
+    
 }
 
 let getUserId = function(){
-    return userInfo.id
-}
-
-let getPassword = function(){
-    return userInfo.password
+    return send.sendMsgGet('http://127.0.0.1:8080/getUserId').then(res=>{
+        return res
+    })
 }
 
 let getAppList = function(){
-    return userInfo.list
+    return send.sendMsgGet('http://127.0.0.1:8080/queryAppList').then(res=>{
+        return res
+    })
+}
+
+let getApplicationId = function(){
+    return send.sendMsgGet('http://127.0.0.1:8080/getApplicationId').then(res=>{
+        return res
+    })
 }
 
 export default{
     setUserInfo,
     getUsername,
     getUserId,
-    getPassword,
-    setAppList,
-    getAppList,
     setUsername,
-    setPassword,
+    getAppList,
+    getApplicationId,
+    setApplicationId
 }

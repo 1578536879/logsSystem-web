@@ -63,27 +63,20 @@ export default {
             let arr = this.domainName.split(';')
             //this.nameState = true
             send.sendMessage('post', 'http://127.0.0.1:8080/createApp', {
-                userId: userInfo.getUserId(),
                 name: that.name,
                 domainNames: arr
             }).then(res=>{
                 console.log(res)
-                if(res.code === 100){
+                if(res.data.code === 100){
                     that.$refs['add-application'].show()
-                    let apps = userInfo.getAppList()
-                    let time = new Date()
-                    apps.push({
-                        userId: userInfo.getUserId(),
-                        name: that.name,
-                        domainNames: arr,
-                        id: res.data.appId,
-                        createTime: `${time.getFullYear()}.${time.getMonth()+1}.${time.getDate()}`
-                    })
-                    console.log(apps)
-                    userInfo.setAppList(apps)
                 }
             }).catch(err=>{
-                that.errMessage =  err.response.data.message
+                if(err.response){
+                    if(err.response.data.code === 250) {
+                        that.$router.push({path:'../login'})
+                    }
+                    that.errMessage =  err.response.data.message
+                }
             })
         },
         back(){
@@ -122,5 +115,10 @@ export default {
         float: right;
         margin-right: 1em;
         width: 10%;
+    }
+    .alertBnt{
+        margin-top: 2em;
+        float: right;
+        width: 20%;
     }
 </style>

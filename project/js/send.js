@@ -10,11 +10,16 @@ let sendMessage = function(method, route, msg){
 }
 
 let sendMsgGet = function(route, msg){
-    return axios.get(`${route}?${msg}`,).then(function(res){
-        return res
-    }).catch(function(err){
-        console.log(err)
-    })
+    if(msg){
+        return axios.get(`${route}?${msg}`,).then(function(res){
+            return res
+        })
+    }
+    else {
+        return axios.get(route,).then(function(res){
+            return res
+        })
+    }
 }
 
 let sendMsgDelete = function(route, msg){

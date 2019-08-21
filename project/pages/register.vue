@@ -3,7 +3,7 @@
         <p>注 册</p>
         <b-alert show variant="danger" dismissible  fade style='margin: auto;width: 70%;' v-if='errMsg'>
             {{errMsg}}
-        </b-alert>
+        </b-alert>    
         <input type = 'text' placeholder = '请输入用户名' ref="username" style='margin-top: 1em;'/>
         <input type = 'password' placeholder = '请输入密码' ref='pwd'/> 
         <input type = 'password' placeholder = '请确认密码' ref='spwd'/> 
