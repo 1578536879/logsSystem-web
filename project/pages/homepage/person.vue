@@ -208,7 +208,7 @@ export default {
         lookAppInfo(index){
             let that = this
             userInfo.setApplicationId(that.list[index]).then(res=>{
-                that.$router.push({path:'../application/information'})
+                that.$router.push({path:'../application/exhibition'})
             })
         }
     },

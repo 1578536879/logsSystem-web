@@ -9,17 +9,11 @@ let sendMessage = function(method, route, msg){
     })
 }
 
-let sendMsgGet = function(route, msg){
-    if(msg){
-        return axios.get(`${route}?${msg}`,).then(function(res){
-            return res
-        })
-    }
-    else {
-        return axios.get(route,).then(function(res){
-            return res
-        })
-    }
+let sendMsgGet = function(route){
+    return axios.get(route,).then(function(res){
+        return res
+    })
+
 }
 
 let sendMsgDelete = function(route, msg){

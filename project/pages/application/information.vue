@@ -123,7 +123,6 @@ export default {
         submit(){
             let flag = false
             let domainNames = this.domainNames
-            console.log(this.modifyIndex)
             if(this.deleteIndex !== -1){
                 domainNames.splice(this.deleteIndex, 1)
                 flag = true
@@ -139,7 +138,6 @@ export default {
                     return
                 }
             }else{
-                console.log(this.modifyIndex)
                 if(!this.modifyName) {
                     this.errMsg = '应用名不能为空'
                     return

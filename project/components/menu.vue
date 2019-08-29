@@ -1,32 +1,34 @@
 <template lang="">
-    <div style='position: absolute; width: 100%; height: 100%;'>  
-         <div class='top'  v-if='type === "homepage"'>
+    <div style='position: absolute; width: 100%; height: 100%;top: 0;'>  
+         <div class='menu-top'  v-if='type === "homepage"'>
             <img src = '../images/homepage/home.svg' @click = 'list' style='cursor:pointer'/>
             <p @click = 'list' style='cursor:pointer'>前端日志监控系统</p>
+            <span class='menu-exit' @click='exit'>退出</span>
         </div>
-        <div class='top' style='text-align:center' v-else >
+        <div class='menu-top' style='text-align:center' v-else >
             <img src='../images/back.svg' style='float:left;padding-top:1em;cursor:pointer' @click='back()'/>
             <p>
                 {{appName}}
             </p>
+            <span class='menu-exit' @click='exit'>退出</span>
         </div>
-        <div class='left'>
+        <div class='menu-left'>
             <div v-if='type === "homepage"'>
-                <div class = 'list' @click='list'>
+                <div class = 'menu-list' @click='list'>
                     <img src = '../images/homepage/list.svg' />
                     <p>应用列表</p>
                 </div>
-                <div class = 'person' @click='person'>
+                <div class = 'menu-person' @click='person'>
                     <img src='../images/homepage/person.svg'/>
                     <p>个人信息</p>
                 </div>
             </div>
             <div v-else>
-                <div class = 'list' @click='statistics'>
+                <div class = 'menu-list' @click='statistics'>
                     <img src = '../images/application/statistics.svg' />
                     <p>收集信息</p>
                 </div>
-                <div class = 'person' @click='appInfo'>
+                <div class = 'menu-person' @click='appInfo'>
                     <img src='../images/application/app.svg'/>
                     <p>应用信息</p>
                 </div>
@@ -37,7 +39,7 @@
 
 <script>
 import router from '../src/router'
-
+import send from '../js/send'
 
 export default {
     name: 'home-menu',
@@ -68,6 +70,14 @@ export default {
         },
         appInfo(){
 
+        },
+        exit(){
+            let that = this
+            send.sendMessage('post', 'http://127.0.0.1:8080/loginOut').then(res=>{
+                that.$router.push({path:'../login'})
+            }).catch(err=>{
+                that.$router.push({path:'../login'})
+            })
         }
     },
 }
@@ -77,49 +87,58 @@ export default {
         margin: 0;
         background: #F5F5F5;
     }
-    .top{
+    .menu-top{
         background: #ffffff;
         border-bottom: 1px solid #DCDCDC;
     }
-    .top  img{
+    .menu-top  img{
         width:2em;    
         background: white;
         padding-bottom: 1em;
     }
-    .top p{
+    .menu-top p{
         display: inline;
         font-size: 2em;
         color: #515151;
         line-height: 2em;
         background: white;
     }
-    .left{
+    .menu-left{
         width: 10em;
         background: #ffffff;
         height: calc(100% - 4.1em);
         border-right: 1px solid #DCDCDC;
     }
-    .left .list, .left .person{
+    .menu-left .menu-list, .menu-left .menu-person{
         background: #F5F5F5;
         /* margin-top: 5em; */
         height: 3em;
         cursor: pointer;
     }
-    .left .list{
+    .menu-left .menu-list{
         transform: translateY(5em);
         margin-bottom: 11em;
 
     }
-    .left .list img, .left .person img{
+    .menu-left .menu-list img, .menu-left .menu-person img{
         width: 3em;
         height: 2em;
         padding-left: 1em;
         padding-bottom: 0.3em;
     }
-    .left .list p, .left .person p{
+    .menu-left .menu-list p, .menu-left .menu-person p{
         display: inline;
         font-size: 20px;
         line-height: 2.5em;
         color: #515151
+    }
+    .menu-exit{
+        float: right;
+        font-size: 15px;
+        line-height: 83px;
+        color: #00B2EE;
+        padding-right: 17px;
+        background: transparent;
+        cursor:pointer
     }
 </style>
