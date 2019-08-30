@@ -2,7 +2,7 @@
     <div style="position: relative;left: 11%;top: 4em;width: 89%;">
         <b-modal ref="exhibition-list-setCondition" title='设置范围' hide-footer>
             <div class="exhitbition-list-condition">
-            <div>日期范围：<input type="date" ref="startTime" value=""/> ~ <input type='date' ref="endTime" @click="setEndTime" value=""/></div>
+            <div>日期范围：<input type="date" ref="startTime" value=""/> ~ <input type='date' ref="endTime" @click="setEndTime" value="" /></div>
             <div>时间取值：
                 <input type="number" style="width: 50px;border: none;border-bottom: 1px solid gray;" ref="intervalTime"/>
                 <select v-model="intervalTimeType" name='second' style="border:none">
@@ -11,7 +11,8 @@
                     <option value="hour">时</option>
                 </select>
                 <span style="font-size: 5px;">
-                    默认为1分钟
+                    当前时间取值为：{{intervalTime}}秒
+                    <!-- {{intervalTimeType === 'second'?'秒':intervalTimeType==='huor'?'时':'分'}} -->
                 </span>
             </div>
             <b-button variant="outline-success" style="float: right;height: 35px;" @click="setCondition">确定</b-button>
@@ -33,7 +34,11 @@
                 </b-list-group>
             </div>
         </div>
-        <div ref='showLogs' style="width:75%;height:500px;margin: auto;top: 85px"></div>
+        <div v-if="!logsInfo" style="width:75%;height:500px;margin: auto;text-align: center;font-size: 20px;position: relative;top: -15em;">莫得日志信息</div>
+        <div ref='showLogs' v-else style="width:75%;height:500px;margin: auto;top: 85px;position: relative;"></div>
+        <div>
+        </div>
+        
     </div>
 </template>
 
@@ -111,7 +116,7 @@ export default {
                     type: 'line'
                 },
             ],
-            intervalTime: 60000, //日志间隔时间,
+            intervalTime: 60, //日志间隔时间,
             xAxisData: [],
             myChart: '',
             titles: ['全部时间', "白屏时间", '首屏时间','DNS查询时间', '页面加载完全时间', 'TCP连接时间', 'onLoad事件加载时间', '读取第一个字节时间', '解析DOM树时间', '内容加载完全时间', '重定向时间', '用户可操作时间'],
@@ -125,11 +130,13 @@ export default {
             startTime: '',
             endTime: '',
             environment: '',
-            version: ''
+            version: '',
+            logsInfo: true
         }
     },
     mounted() { 
         console.log(this.showIndex)
+        this.myChart = echarts.init(this.$refs.showLogs);
         this.getTimeDate()
     },
     watch: {
@@ -139,17 +146,29 @@ export default {
     },
     methods: {
         getTimeDate(){
-            this.init()
+            // if(this.intervalTimeType === 'minute'){
+            //     this.intervalTime = this.intervalTime * 60
+            // }else if(this.intervalTimeType === 'hour'){
+            //     this.intervalTime = this.intervalTime * 3600
+            // }
+            // this.intervalTime = intervalTime
+            this.myChart.showLoading()
             let that = this
-            send.sendMsgGet(`http://127.0.0.1:8080/queryLogs?startTime=${that.startTime}&&endTime=${that.endTime}&&intervalTime=${that.intervalTime}&&environment=${that.environment}&&version=${that.version}`, ).then(res=>{
+            send.sendMsgGet(`http://127.0.0.1:8080/queryLogs?startTime=${that.startTime}&&endTime=${that.endTime}&&intervalTime=${that.intervalTime * 1000}&&environment=${that.environment}&&version=${that.version}`, ).then(res=>{
                 if(res.data.code === 100){
                     console.log(res)
-                    that.logs = res.data.data.logs
-                    that.xAxisData = res.data.data.xAxisData
+                    if(res.data.data.length === 0){
+                        that.myChart.hideLoading()
+                        that.logsInfo = false
+                    }else{
+                        that.logs = res.data.data
+                        that.logsInfo = true
+                        that.getChartData()
+                    }
                     
-                    that.getChartData()
                 }
             }).catch(err=>{
+                console.log(err)
                 if(err.response){
                     if(err.response.data.code === 250){
                         that.$router.push({path:'../login'})
@@ -157,67 +176,28 @@ export default {
                 }
             })
         },
-        init(){
-        let list = this.list
-        let titles = this.titles
-        this.myChart = echarts.init(this.$refs.showLogs);
-        this.myChart.showLoading()
-        // let option = {
-                
-        //     }
-        // this.myChart.setOption(options)
-        },
         getChartData(){
             let that = this
-            this.xAxisData.forEach((e, index) =>{
-                let element = that.logs[index]
-                if(element){
-                    if(index !== that.xAxisData.length - 1){
-                        let t1 = new Date(e).getTime()
-                        let t2 = new Date(that.xAxisData[index + 1]).getTime()
-                        if(!(element >= ti && element < t2)) {
-                            for(let i=0; i<that,list.length; i++){
-                                that.list[i].data.push(-1)
-                            }
-                        }else{
-                            that.list[0].data.push(element.content.whiteScreenTime)
-                            that.list[1].data.push(element.content.firstScreenTime)
-                            that.list[2].data.push(element.content.DNSTime)
-                            that.list[3].data.push(element.content.pageLoadingCompleted)
-                            that.list[4].data.push(element.content.TCPTime)
-                            that.list[5].data.push(element.content.onLoadTime)
-                            that.list[6].data.push(element.content.readFirstBitTime)
-                            that.list[7].data.push(element.content.analysisDOMTime)
-                            that.list[8].data.push(element.content.contentLoadingCompleted)
-                            that.list[9].data.push(element.content.redirectTime)
-                            that.list[10].data.push(element.content.unloadTime)
-                            that.list[11].data.push(element.content.userOperationalTime)
-                        }
-                    }else{
-                        that.list[0].data.push(element.content.whiteScreenTime)
-                        that.list[1].data.push(element.content.firstScreenTime)
-                        that.list[2].data.push(element.content.DNSTime)
-                        that.list[3].data.push(element.content.pageLoadingCompleted)
-                        that.list[4].data.push(element.content.TCPTime)
-                        that.list[5].data.push(element.content.onLoadTime)
-                        that.list[6].data.push(element.content.readFirstBitTime)
-                        that.list[7].data.push(element.content.analysisDOMTime)
-                        that.list[8].data.push(element.content.contentLoadingCompleted)
-                        that.list[9].data.push(element.content.redirectTime)
-                        that.list[10].data.push(element.content.unloadTime)
-                        that.list[11].data.push(element.content.userOperationalTime)
-                    }
-                    
-                    
-                }
-                else {
-                    for(let i=0; i<that.list.length; i++){
-                        that.list[i].data.push(-1)
-                    }
-                }
-                
-                
+            for(let i=0;i<that.list.length;i++) that.list[i].data=[]
+            that.xAxisData = []
+            this.logs.forEach(ele=>{
+                let time = new Date(ele.content.time)
+                time = `${time.getFullYear()}/${time.getMonth()+1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}` 
+                that.xAxisData.push(time)
+                that.list[0].data.push(ele.content.whiteScreenTime)
+                that.list[1].data.push(ele.content.firstScreenTime)
+                that.list[2].data.push(ele.content.DNSTime)
+                that.list[3].data.push(ele.content.pageLoadingCompleted)
+                that.list[4].data.push(ele.content.TCPTime)
+                that.list[5].data.push(ele.content.onLoadTime)
+                that.list[6].data.push(ele.content.readFirstBitTime)
+                that.list[7].data.push(ele.content.analysisDOMTime)
+                that.list[8].data.push(ele.content.contentLoadingCompleted)
+                that.list[9].data.push(ele.content.redirectTime)
+                that.list[10].data.push(ele.content.unloadTime)
+                that.list[11].data.push(ele.content.userOperationalTime)
             })
+               
             // debugger
             this.showCharts()
             console.log(that.list,that.xAxisData)
@@ -226,16 +206,17 @@ export default {
             let xAxisData = this.xAxisData
             let list = []
             
-            let titles = this.titles
+            let titles = []
             // list = this.list[this.showIndex - 1]
             this.myChart.hideLoading()
-            debugger
+            // debugger
             
             if(this.showIndex === 0) {
                 list = this.list
+                titles = this.titles
             }else if(this.showIndex !== 0){
                 list = this.list[this.showIndex - 1]
-                titles = this.titles[this.showIndex]
+                titles.push(this.titles[this.showIndex])
             }
             let options = {
                 tooltip: {trigger: 'axis'},
@@ -243,7 +224,7 @@ export default {
                     data: titles,
                 },
                 grid: {
-                    top:'10%',
+                    top:'12%',
                     left: '3%',
                     right: '4%',
                     bottom: '3%',
@@ -255,10 +236,11 @@ export default {
                     }
                 },
                 dataZoom: [{
-                    type: 'inside',
+                    type: 'slider',
+                    show: true,
                     start: 0,
-                    end: 10
-                
+                    end: 100,
+                    handleSize: 8
                 }],
                 yAxis: {
                     type: 'value'
@@ -270,19 +252,13 @@ export default {
                 },
                 series: list
             }
-            // if(this.first) {
-            //     this.myChart.hideLoading()
-               
-            //     this.first = false
-            // }else {
-            //     this.myChart.setOption(option)
-            // }
             
             this.myChart.setOption(options, true)
             // this.myChart.setOption(option)
             console.log(options, list)
         },
         changeTime(index){
+            if(!this.logsInfo) return
             this.showIndex = index
             this.onShowType = this.titles[index]
             this.getChartData()
@@ -300,19 +276,20 @@ export default {
         setEndTime(){
             this.startTime = new Date(`${this.$refs.startTime.value} 0:0:0`).getTime()
             console.log( this.startTime, this.$refs.startTime.value)
-            this.$refs.endTime.min = this.startTime
+            this.$refs.endTime.min = this.$refs.startTime.value
             console.log(this.intervalTimeType)
         },
         setCondition(){
             this.endTime = new Date(`${this.$refs.endTime.value} 23:59:59`).getTime()
             console.log(this.$refs.intervalTime.value)
             if(this.$refs.intervalTime.value){
+                this.intervalTime = this.$refs.intervalTime.value
                 if(this.intervalTimeType === 'second') {
-                    this.intervalTime = this.$refs.intervalTime.value * 1000
+                    this.intervalTime = this.$refs.intervalTime.value
                 }else if(this.intervalTimeType === 'minute'){
-                    this.intervalTime = this.$refs.intervalTime.value * 60000
+                    this.intervalTime = this.$refs.intervalTime.value * 60
                 }else if(this.intervalTimeType === 'hour'){
-                    this.intervalTime = this.$refs.intervalTime.value * 3600000
+                    this.intervalTime = this.$refs.intervalTime.value * 3600
                 }
             }
             this.cancel()
@@ -333,7 +310,7 @@ export default {
     }
     .exhibition-list-type{
         position: absolute;
-        /* left: 25%; */
+        z-index: 1;
         top: 1em;
         width: 100%;
         text-align: center;

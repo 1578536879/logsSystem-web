@@ -54,7 +54,6 @@ export default {
         // console.log(this.type)
     },
     methods: {
-
         list(){
             console.log(123)
             this.$router.push({path: './applicationList'})
@@ -63,12 +62,13 @@ export default {
             this.$router.push({path: './person'})
         },
         back(){
-            this.$router.go(-1)
+            this.$router.push({path: '../homepage/applicationList'})
         },
         statistics(){
-
+            this.$router.push({path: './exhibition'})
         },
         appInfo(){
+            this.$router.push({path: './information'})
 
         },
         exit(){
